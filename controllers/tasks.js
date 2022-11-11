@@ -1,3 +1,4 @@
+const { off } = require('../models/tasks');
 const Task = require('../models/tasks') ;
 
 const getAllTasks = async (req,res)=>{
@@ -15,9 +16,8 @@ const createTask = async (req , res)=>{
     }
 };
 const getTask = async (req , res)=>{
-    console.log(req.params.id) ;
     try{
-        const task = await Task.find({_id : req.params.id}) ;
+        const task = await Task.findById({_id : req.params.id}) ;
         if(!task){
             return res.status(404).json({msg : `no task with id : ${req.params.id}`});
         }
@@ -30,7 +30,7 @@ const getTask = async (req , res)=>{
 const deleteTask = async(req , res)=>{
     try{
         const {id : taskID} = req.params ;
-        const task = await Task.findOneAndDelete({_id : taskID}) ;
+        const task = await Task.findByIdAndDelete({_id : taskID}) ;
         if(!task){
             return res.status(404).json({message : `no task with id : ${taskID}`}) ;
         }
@@ -44,14 +44,20 @@ const deleteTask = async(req , res)=>{
 const updateTask = async (req , res)=>{
     try{
         const {id : taskID} = req.params ;
-        const task = await Task.findByIdAndUpdate({_id : taskID} , req.body , {
+        const task = await Task.findByIdAndUpdate(taskID , req.body , {
             new : true ,
             runValidators : true ,
         });
-        res.status(200).json(task) ;
+        if(!task){
+            return res.status(404).json({message : `document with id ${taskID} does not exist`});
+        }
+        else{
+            res.status(200).json(task) ;
+        }
     }
     catch(error){
-        res.status(404).json({error_message : `task with id does not exist`}) ;
+        console.log(error) ;
+        res.status(500).json({error_message : `internal server error`}) ;
     }
 };
 module.exports = {
