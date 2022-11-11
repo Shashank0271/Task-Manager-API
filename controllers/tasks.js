@@ -8,10 +8,10 @@ const createTask = async (req , res)=>{
     const task = new Task(req.body);
     try{
         const newTask = await task.save();
-        res.json(newTask).status(201) ;
+        res.status(201).json(newTask) ;
     }
     catch(error){
-        res.json({message : error}).status(500) ;
+        res.status(500).json({message : error}) ;
     }
 };
 const getTask = async (req , res)=>{
@@ -35,7 +35,7 @@ const deleteTask = async(req , res)=>{
             return res.status(404).json({message : `no task with id : ${taskID}`}) ;
         }
         console.log(task);
-        res.json({task}).status(204) ;
+        res.status(204).json();
     }
     catch(error){
         res.status(500).json({message : error}) ;
