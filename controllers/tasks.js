@@ -5,24 +5,42 @@ const getAllTasks = async (req,res)=>{
     res.status(200).json({result}) ;
 };
 const createTask = async (req , res)=>{
-    console.log(req.body) ;
     const task = new Task(req.body);
     try{
         const newTask = await task.save();
         res.json(newTask).status(201) ;
     }
     catch(error){
-        res.json({error : error}) ;
+        res.json({message : error}).status(500) ;
     }
 };
-const getTask = (req , res)=>{
-    res.json({id : req.params.id}) ;
+const getTask = async (req , res)=>{
+    console.log(req.params.id) ;
+    try{
+        const task = await Task.find({_id : req.params.id}) ;
+        res.json(task).status(200) ;
+    }
+    catch(error){
+        res.json({message : error}).status(500) ;
+    }
 };
-const deleteTask = (req , res)=>{
-    res.send("deleted task") ;
+const deleteTask = async(req , res)=>{
+    try{
+        await Task.deleteOne({name : req.params.id}) ;
+        res.status(204).json() ;
+    }
+    catch(error){
+        res.json({message : error}).status(500) ;
+    }
 };
-const updateTask = (req , res)=>{
-    res.send("updated task") ;
+const updateTask = async (req , res)=>{
+    try{
+        await Task.updateOne({name : req.params.id} , {completed : true});
+        res.json({message : "updated"}).status(200) ;
+    }
+    catch(error){
+        res.json({message : error}).status(500) ;
+    }
 };
 module.exports = {
     getAllTasks,
