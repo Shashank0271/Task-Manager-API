@@ -3,10 +3,15 @@ const app = express();
 const tasks = require('./routes/tasks') ;
 const connectDB = require('./db/connect') ;
 require('dotenv').config();
+const errorHandlerMiddleware = require('./middleware/error-handler');
+
+//port :
 const port = 4000;
 
+//middleware :
 app.use(express.json()) ;
 app.use('/api/tasks' , tasks) ;
+app.use(errorHandlerMiddleware) ;
 
 const start = async()=>{
     try{

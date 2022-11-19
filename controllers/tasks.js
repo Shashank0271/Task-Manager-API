@@ -1,65 +1,49 @@
-const { off } = require('../models/tasks');
 const Task = require('../models/tasks') ;
+const asyncWrapper = require('../middleware/async');
+const { createCustomError } = require('../errors/custom-error');
 
-const getAllTasks = async (req,res)=>{
+
+const getAllTasks = asyncWrapper(async (_,res)=>{
     const result = await Task.find() ;
     res.status(200).json({result}) ;
-};
-const createTask = async (req , res)=>{
+});
+
+const createTask = asyncWrapper(async (req , res)=>{ 
     const task = new Task(req.body);
-    try{
-        const newTask = await task.save();
-        res.status(201).json(newTask) ;
+    const newTask = await task.save();
+    res.status(201).json(newTask) ;
+});
+
+const getTask = asyncWrapper(async (req , res , next)=>{
+    const task = await Task.findById({_id : req.params.id}) ;
+    if(!task){
+        return next(createCustomError('Not found' , 404)) ; //goes to error handling middleware , since thats the order of declaration in the app.js file
     }
-    catch(error){
-        res.status(500).json({message : error}) ;
+    res.status(200).json(task) ;
+}
+);
+
+const deleteTask = asyncWrapper(async(req , res , next)=>{
+    const {id : taskID} = req.params ;
+    const task = await Task.findByIdAndDelete({_id : taskID}) ;
+    if(!task){
+        return next(createCustomError(`no task with id : ${taskID}` , 404)) ;
     }
-};
-const getTask = async (req , res)=>{
-    try{
-        const task = await Task.findById({_id : req.params.id}) ;
-        if(!task){
-            return res.status(404).json({msg : `no task with id : ${req.params.id}`});
-        }
-        res.json(task).status(200) ;
+    res.status(204).json();
+});
+
+const updateTask = asyncWrapper(async (req , res , next)=>{
+    const {id : taskID} = req.params ;
+    const task = await Task.findByIdAndUpdate(taskID , req.body , {
+        new : true ,
+        runValidators : true ,
+    });
+    if(!task){
+        return next(createCustomError(`document with id ${taskID} does not exist` , 404)) ;
     }
-    catch(error){
-        res.json({message : error}).status(404) ;
-    }
-};
-const deleteTask = async(req , res)=>{
-    try{
-        const {id : taskID} = req.params ;
-        const task = await Task.findByIdAndDelete({_id : taskID}) ;
-        if(!task){
-            return res.status(404).json({message : `no task with id : ${taskID}`}) ;
-        }
-        console.log(task);
-        res.status(204).json();
-    }
-    catch(error){
-        res.status(500).json({message : error}) ;
-    }
-};
-const updateTask = async (req , res)=>{
-    try{
-        const {id : taskID} = req.params ;
-        const task = await Task.findByIdAndUpdate(taskID , req.body , {
-            new : true ,
-            runValidators : true ,
-        });
-        if(!task){
-            return res.status(404).json({message : `document with id ${taskID} does not exist`});
-        }
-        else{
-            res.status(200).json(task) ;
-        }
-    }
-    catch(error){
-        console.log(error) ;
-        res.status(500).json({error_message : `internal server error`}) ;
-    }
-};
+    res.status(200).json(task) ;
+});
+
 module.exports = {
     getAllTasks,
     createTask,
